@@ -15,6 +15,7 @@ import api_requeriments
 
 queue = []
 my_queue = []
+play_stopped = False
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -25,9 +26,9 @@ YDL_OPTIONS = {
     'forcejson': True
 }
 FFMPEG_OPTIONS = {
-    'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn -f s16le -ar 48000 -ac 2'}
-
+    'before_options': '-thread_queue_size 512 -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+    'options':'-vn -ar 48000 -ac 2 -f opus'
+}
 GEMINI_API_KEY = api_requeriments.gemini_api_key
 BOT_TOKEN = api_requeriments.BOT_TOKEN
 CHANNEL_ID = api_requeriments.channel_id
@@ -36,7 +37,6 @@ intents = discord.Intents.default()
 intents.message_content = True 
 intents.voice_states = True
 bot = commands.Bot(command_prefix='!',intents= intents,help_command=None)
-
 
 @bot.command()
 async def shutdown(ctx):
@@ -63,6 +63,9 @@ async def join(ctx):
     if ctx.author.voice is None:
         await ctx.send("You need to be in a voice channel!")
     voice_channel = ctx.author.voice.channel
+    if ctx.voice_client is not None:
+        await ctx.send("I am already in the voice channel!")
+        return
     voice_client = await voice_channel.connect()
     await ctx.send(f"Connected to {voice_channel.name}")
 
@@ -77,10 +80,10 @@ async def add(ctx, *, song: str):
     my_queue.append(song)
 @bot.command()
 async def remove(ctx, *, song: str):
-    for i, (url, title) in enumerate(my_queue):
-        if song.lower() in title.lower():
-            del my_queue[i]
-            await ctx.channel.send(f"Removed from queue: {title}")
+    for i in my_queue:
+        if song.lower() in i.lower():
+            my_queue.remove(i)
+            await ctx.channel.send(f"Removed from queue: {i}")
             return
     await ctx.channel.send(f"Song '{song}' not found in the queue.")
 @bot.command()
@@ -100,6 +103,11 @@ async def resume(ctx):
 
 @bot.command()
 async def play(ctx):
+    global play_stopped
+    play_stopped = False
+    if ctx.voice_client is None:
+        await ctx.send("Bot is not connected to a voice channel. Use !join first.")
+        return
     if len(my_queue) > 0:
         await ctx.channel.send("it may take a while to load the song")
     if ctx.voice_client is None:
@@ -108,6 +116,7 @@ async def play(ctx):
     if len(my_queue) == 0:
         await ctx.send("Queue is empty. Add songs with !add.")
         return
+    
     loop = asyncio.get_event_loop()
     def ytdlp_extract():
         with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -119,11 +128,14 @@ async def play(ctx):
     queue.append((url, title))
     my_queue.pop(0)
     url, title = queue.pop(0)
-    source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
+    source = discord.FFmpegOpusAudio(url, **FFMPEG_OPTIONS)
+
     def after_playing(error):
-        time.sleep(1)  # Small delay to ensure proper transition
+        # Do not auto-start next track if stop() was called
         if error:
             print(f"Error: {error}")
+        if play_stopped:
+            return
         fut = asyncio.run_coroutine_threadsafe(play(ctx), bot.loop)
         try:
             fut.result()
@@ -155,6 +167,8 @@ async def skip(ctx):
         
 @bot.command() # stop
 async def stop(ctx):
+    global play_stopped
+    play_stopped = True
     my_queue.clear()
     if ctx.voice_client.is_playing():
         ctx.voice_client.stop()
@@ -166,11 +180,11 @@ async def stop(ctx):
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-2.5-flash')
 config=types.GenerateContentConfig(
-      response_modalities=['TEXT', 'IMAGE'])
+      response_modalities=['TEXT'])
 
 @bot.command() #working with AI(gemini from google)
 async def translate(ctx, *, sentence):
-    response = model.generate_content(f"translate this to turkis'{sentence}'")
+    response = model.generate_content(f"translate this to turkish'{sentence}'")
     await ctx.channel.send(response.text)
 
 user_list = {}
@@ -206,4 +220,5 @@ async def help(ctx):
 
 
 bot.run(BOT_TOKEN)
+
 
