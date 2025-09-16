@@ -25,7 +25,12 @@ This is a Discord music bot built using Python and the discord.py library. The b
 ```bash
 pip install discord.py yt-dlp google.generativeai 
 ```
-3. Set up your Discord bot token and other configuration variables
+3. Set up the bot token and API keys in `api_requeriments.py`
+```python
+BOT_TOKEN = "your_bot_token"
+GEMINI_API_KEY = "your_gemini_api_key"
+CHANNEL_ID = "your_channel_id"
+```
 4. Run the bot
 ```bash
 python bot.py
@@ -51,6 +56,7 @@ python bot.py
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
 
 
 
