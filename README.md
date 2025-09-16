@@ -6,7 +6,7 @@ This is a Discord music bot built using Python and the discord.py library. The b
 - Play music from YouTube
 - Control playback (play, pause, resume, skip, stop)
 - Manage a queue of songs
-- Persnonal Ai chat with memory(Gemini from Google)
+- Persnonal Ai chat with memory (Gemini from Google)
 - Use !help to see all commands
 
 ## Requirements
@@ -56,6 +56,7 @@ python bot.py
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
 
 
 
