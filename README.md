@@ -29,7 +29,7 @@ pip install discord.py yt-dlp google.generativeai
 ```python
 BOT_TOKEN = "your_bot_token"
 GEMINI_API_KEY = "your_gemini_api_key"
-CHANNEL_ID = "your_channel_id"
+CHANNEL_ID = "your_channel_id" # Its for just 'I am ready' message.
 ```
 4. Run the bot
 ```bash
@@ -56,6 +56,7 @@ python bot.py
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
 
 
 
