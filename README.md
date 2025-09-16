@@ -17,9 +17,9 @@ This is a Discord music bot built using Python and the discord.py library. The b
 - ffmpeg # Make sure ffmpeg is installed and added to your system PATH
 - A Discord bot token # Get it from the Discord Developer Portal
 - Google API key for Gemini
-- Channel ID for the 'I am ready' message # You can get it by enabling Developer Mode in Discord settings and right-clicking the channel
--                                         # After that, copy the ID and paste it in the api_requeriments.py file
--                                         # And then you can get answer from every channel in the server.That was for just 'I am ready' message.
+- Channel ID for the 'I am ready' message (You can get it by enabling Developer Mode in Discord settings and right-clicking the channel.
+- After that, copy the ID and paste it in the api_requeriments.py file
+- And then you can get answer from every channel in the server.That was for just 'I am ready' message.)
 
 ## Installation
 1. Download or clone the repository
@@ -53,3 +53,4 @@ python bot.py
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
