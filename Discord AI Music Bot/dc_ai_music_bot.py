@@ -14,6 +14,7 @@ from google.genai import types
 import api_requeriments
 
 queue = []
+my_queue = []
 YDL_OPTIONS = {
     'format': 'bestaudio/best',
     'noplaylist': True,
@@ -25,7 +26,7 @@ YDL_OPTIONS = {
 }
 FFMPEG_OPTIONS = {
     'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-    'options': '-vn -filter:a "volume=0.25"'}
+    'options': '-vn -f s16le -ar 48000 -ac 2'}
 
 GEMINI_API_KEY = api_requeriments.gemini_api_key
 BOT_TOKEN = api_requeriments.BOT_TOKEN
@@ -37,9 +38,14 @@ intents.voice_states = True
 bot = commands.Bot(command_prefix='!',intents= intents,help_command=None)
 
 
+@bot.command()
+async def shutdown(ctx):
+    await ctx.channel.send('closing in 10 sec...')
+    os.system("script.bat")
+
 @bot.event
 async def on_ready():
-    channel = bot.get_channel(CHANNEL_ID) # this wont work unless you add channel id to api_requeriments.py
+    channel = bot.get_channel(CHANNEL_ID)
     await channel.send('I am ready to be used :D')
 
 @bot.event
@@ -54,35 +60,26 @@ async def on_message(message):
 
 @bot.command() # join
 async def join(ctx):
-    
     if ctx.author.voice is None:
         await ctx.send("You need to be in a voice channel!")
     voice_channel = ctx.author.voice.channel
     voice_client = await voice_channel.connect()
     await ctx.send(f"Connected to {voice_channel.name}")
 
-@bot.command() #clear the queue
+@bot.command()
 async def clear(ctx):
-    queue.clear()
+    my_queue.clear()
     await ctx.channel.send("queue is now empty")
 
 @bot.command()
 async def add(ctx, *, song: str):
-    loop = asyncio.get_event_loop()
-    def ytdlp_extract():
-        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
-            return ydl.extract_info(f"ytsearch:{song}", download=False)
-    result = await loop.run_in_executor(None, ytdlp_extract)
-    first_result = result['entries'][0]
-    url = first_result['url']
-    title = first_result['title']
-    queue.append((url, title))
-    await ctx.channel.send(f"Added to queue: {title}")
+    await ctx.channel.send(f" '{song}' added to the queue")
+    my_queue.append(song)
 @bot.command()
 async def remove(ctx, *, song: str):
-    for i, (url, title) in enumerate(queue):
+    for i, (url, title) in enumerate(my_queue):
         if song.lower() in title.lower():
-            del queue[i]
+            del my_queue[i]
             await ctx.channel.send(f"Removed from queue: {title}")
             return
     await ctx.channel.send(f"Song '{song}' not found in the queue.")
@@ -103,15 +100,28 @@ async def resume(ctx):
 
 @bot.command()
 async def play(ctx):
+    if len(my_queue) > 0:
+        await ctx.channel.send("it may take a while to load the song")
     if ctx.voice_client is None:
         await ctx.send("Bot is not connected to a voice channel. Use !join first.")
         return
-    if len(queue) == 0:
+    if len(my_queue) == 0:
         await ctx.send("Queue is empty. Add songs with !add.")
         return
+    loop = asyncio.get_event_loop()
+    def ytdlp_extract():
+        with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
+            return ydl.extract_info(f"ytsearch:{my_queue[0]}", download=False)
+    result = await loop.run_in_executor(None, ytdlp_extract)
+    first_result = result['entries'][0]
+    url = first_result['url']
+    title = first_result['title']
+    queue.append((url, title))
+    my_queue.pop(0)
     url, title = queue.pop(0)
     source = discord.FFmpegPCMAudio(url, **FFMPEG_OPTIONS)
     def after_playing(error):
+        time.sleep(1)  # Small delay to ensure proper transition
         if error:
             print(f"Error: {error}")
         fut = asyncio.run_coroutine_threadsafe(play(ctx), bot.loop)
@@ -131,21 +141,25 @@ async def leave(ctx):
 
 @bot.command() # stop
 async def skip(ctx):
-    if len(queue) > 0:
+    if len(my_queue) > 0:
         if ctx.voice_client.is_playing():
             ctx.voice_client.stop()
             await ctx.send("Next song is playing.")
-    elif len(queue) == 0:
+            return
+    elif len(my_queue) == 0:
         await ctx.send("Queue is empty. Add songs with !add.")
+        return
     if not ctx.voice_client.is_playing():
         await ctx.send("There is no audio :D")
+        return
         
 @bot.command() # stop
 async def stop(ctx):
-    queue.clear()
+    my_queue.clear()
     if ctx.voice_client.is_playing():
         ctx.voice_client.stop()
         await ctx.send("Playback stopped and queue cleaned.")
+        return
     else:
         await ctx.send("There is no audio :D")
 
