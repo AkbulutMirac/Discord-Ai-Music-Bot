@@ -31,8 +31,8 @@ pip install discord.py yt-dlp google.generativeai
 python bot.py
 ```
 ## Usage
-!!!!!!!!!!You need to use the join command to be able to use the play command.!!!!!!!!!
-!!!!!!!!!!You need to add songs to the queue with !add before using !play.!!!!!!!!!!!!!
+-!!!!!!!!!!You need to use the join command to be able to use the play command.!!!!!!!!!
+-!!!!!!!!!!You need to add songs to the queue with !add before using !play.!!!!!!!!!!!!!
 - Use `!join` to make the bot join your voice channel
 - Use `!play` to play a song # it will play the first song in the queue
 - Use `!leave` to make the bot leave the voice channel
@@ -51,5 +51,6 @@ python bot.py
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
 
 
