@@ -35,7 +35,6 @@ cd <your path to discord ai music bot file> #C:\Users\yourname\OneDrive\Desktop\
 python dc_ai_music_bot.py
 ```
 ## Usage
-Quick note: To play a song, first add it to the queue with `!add <song name>`, then use !play.
 ### Queue
 - `!add <song>` — Add a song to the queue
 - `!remove <name>` — Remove a song from the queue
@@ -62,6 +61,7 @@ Quick note: To play a song, first add it to the queue with `!add <song name>`, t
 - The bot requires permissions to connect, speak, and read messages in the Discord server. You can set these permissions in the Discord Developer Portal when you create your bot.
 - The bot uses Google Gemini for AI chat functionality, so ensure you have a valid API key and the google.generativeai library installed
 - The bot's AI chat functionality has a memory for each user, which is reset when the bot restarts
+
 
 
 
