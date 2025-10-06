@@ -54,12 +54,6 @@ async def on_ready():
     channel = bot.get_channel(CHANNEL_ID)
     await channel.send('I am ready to be used :D')
 
-@bot.command()#to close my pc
-async def shutdown(ctx):
-    async with ctx.channel.typing():
-        await ctx.channel.send('closing in 10 sec...')
-        os.system("script.bat")
-
 
 @bot.command() # clear the queue
 async def clear(ctx):
@@ -71,6 +65,8 @@ async def add(ctx, *, song: str):
     async with ctx.channel.typing():
         await ctx.channel.send(f" '{song}' added to the queue")
     my_queue.append(song)
+    if not ctx.voice_client or not ctx.voice_client.is_playing():
+        await play(ctx)
 @bot.command() # remove from queue
 async def remove(ctx, *, song: str):
     async with ctx.channel.typing():
@@ -256,7 +252,7 @@ async def help(ctx):
     async with ctx.channel.typing():
         embed = discord.Embed(
             title="Help — Commands",
-            description="Quick note: To play a song, first add it to the queue with `!add <song name>`, then use `!play`.",
+            description="Here are the available commands:",
             color=discord.Color.blurple()
         )
         embed.add_field(name="Queue", value="`!add <song>` — Add a song to the queue\n`!remove <name>` — Remove a song from the queue\n`!clear` — Clear the queue\n`!queue` — Show the current queue", inline=False)
@@ -270,4 +266,5 @@ async def help(ctx):
         await ctx.send(embed=embed)
 
 bot.run(BOT_TOKEN)
+
 
