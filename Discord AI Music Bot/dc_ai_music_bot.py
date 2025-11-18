@@ -65,8 +65,6 @@ async def add(ctx, *, song: str):
     async with ctx.channel.typing():
         await ctx.channel.send(f" '{song}' added to the queue")
     my_queue.append(song)
-    if not ctx.voice_client or not ctx.voice_client.is_playing():
-        await play(ctx)
 @bot.command() # remove from queue
 async def remove(ctx, *, song: str):
     async with ctx.channel.typing():
@@ -173,12 +171,22 @@ async def speak(ctx, *, text):
     source = discord.FFmpegOpusAudio(mp3_fp, pipe=True,**FFMPEG_SPEAK_OPTIONS)
     ctx.voice_client.play(source)
 @bot.command() # play
-async def play(ctx):
+async def play(ctx: Context,*,song_name:str=None):
     global play_stopped
     play_stopped = False
+    if ctx.voice_client and ctx.voice_client.is_playing():
+        await ctx.send("The bot is currently playing audio, please wait.")
+        return
     if ctx.author.voice is None:
         await ctx.send("You need to be in a voice channel!")
         return
+    if song_name:
+        await ctx.channel.send("It may take a while to load the song")
+        my_queue.append(song_name)
+    if len(my_queue) == 0 and song_name is None:
+        await ctx.send("Queue is empty. Add songs with !add.")
+        return
+    await ctx.channel.send("It may take a while to load the song")
     if ctx.voice_client is None:
         await ctx.author.voice.channel.connect()
         mp3_fp = io.BytesIO()
@@ -189,12 +197,6 @@ async def play(ctx):
         source = discord.FFmpegOpusAudio(mp3_fp, pipe=True,**FFMPEG_SPEAK_OPTIONS)
         ctx.voice_client.play(source)
     await asyncio.sleep(0.5)
-    if len(my_queue) > 0:
-        await ctx.channel.send("It may take a while to load the song")
-    if len(my_queue) == 0:
-        await ctx.send("Queue is empty. Add songs with !add.")
-        return
-    
     loop = asyncio.get_event_loop()
     def ytdlp_extract():
         with yt_dlp.YoutubeDL(YDL_OPTIONS) as ydl:
@@ -203,9 +205,7 @@ async def play(ctx):
     first_result = result['entries'][0]
     url = first_result['url']
     title = first_result['title']
-    queue.append((url, title))
     my_queue.pop(0)
-    url, title = queue.pop(0)
     source = discord.FFmpegOpusAudio(url, **FFMPEG_OPTIONS)
 
     def after_playing(error):
@@ -219,6 +219,7 @@ async def play(ctx):
             fut.result()
         except Exception as e:
             print(f"After playing error: {e}")
+    
     ctx.voice_client.play(source, after=after_playing)
     await ctx.send(f"Now playing: {title}")
 
@@ -256,7 +257,7 @@ async def help(ctx):
             color=discord.Color.blurple()
         )
         embed.add_field(name="Queue", value="`!add <song>` — Add a song to the queue\n`!remove <name>` — Remove a song from the queue\n`!clear` — Clear the queue\n`!queue` — Show the current queue", inline=False)
-        embed.add_field(name="Playback", value="`!play` — Bot joins the voice channel and plays the queue\n`!pause` — Pause playback\n`!resume` — Resume playback\n`!skip` — Skip to the next song\n`!stop` — Stop playback and clear the queue", inline=False)
+        embed.add_field(name="Playback", value="`!play <song>` — Bot joins the voice channel and plays the queue or your song\n`!pause` — Pause playback\n`!resume` — Resume playback\n`!skip` — Skip to the next song\n`!stop` — Stop playback and clear the queue", inline=False)
         embed.add_field(name="Voice (TTS)", value="`!speak <text>` — Bot speaks the given text in Turkish", inline=False)
         embed.add_field(name="AI", value="`!translate <text>` — Translate text to Turkish\n`!chat <message>` — Chat with Gemini AI", inline=False)
         embed.add_field(name="Voice Channel", value="`!join` — Bot joins your voice channel\n`!leave` — Bot leaves the voice channel", inline=False)
@@ -266,5 +267,6 @@ async def help(ctx):
         await ctx.send(embed=embed)
 
 bot.run(BOT_TOKEN)
+
 
 
